@@ -432,12 +432,20 @@ public partial class TPO_01 : Indicator
 
         var interval = GetBarInterval(lastBar);
         var profileStart = periodStart;
+        // Keep the forming chart candle clear: the live profile may only grow
+        // across bars that have already elapsed within this profile period.
+        // Once the period closes, the normal configured width is restored.
+        var liveWidthCapInBars = periodEnd == System.DateTime.MaxValue
+            ? Math.Max(0, lastBar - firstBar)
+            : double.PositiveInfinity;
         var names = new System.Collections.Generic.List<string>(volumes.Count + 2);
         var color = ProfileColor;
 
         foreach (var row in volumes)
         {
-            var widthInBars = Math.Max(0.25, MaxWidthBars * ProfileWidthScalePercent / 100.0 * row.Value / maxVolume);
+            var widthInBars = Math.Min(
+                Math.Max(0.25, MaxWidthBars * ProfileWidthScalePercent / 100.0 * row.Value / maxVolume),
+                liveWidthCapInBars);
             // Anchor the profile at the first bar in the calculation window and
             // extend each row to the right according to its relative volume.
             var startTime = profileStart;
@@ -451,7 +459,7 @@ public partial class TPO_01 : Indicator
             var name = $"TPO01_{profileNumber}_{row.Key}";
             var isVpoc = ShowVPOC && vpocLevel.HasValue && row.Key == vpocLevel.Value;
             var isTpoc = tpocLevel.HasValue && row.Key == tpocLevel.Value;
-            if (!OuterContourOnly)
+            if (!OuterContourOnly && widthInBars > 0)
             {
                 if (isTpoc)
                 {
@@ -477,7 +485,7 @@ public partial class TPO_01 : Indicator
                 }
             }
 
-            if (OuterContourOnly && isTpoc)
+            if (OuterContourOnly && isTpoc && widthInBars > 0)
             {
                 var tpocName = $"TPO01_TPOC_Fill_{profileNumber}_{row.Key}";
                 var tpocRectangle = Chart.DrawRectangle(tpocName, startTime, upperPrice, endTime, lowerPrice, TpocColor, 1);
@@ -563,8 +571,9 @@ public partial class TPO_01 : Indicator
         {
             var lvnName = $"TPO01_StrongLVN_Ray_{profileNumber}_{level}";
             var isLiveProfile = periodEnd == System.DateTime.MaxValue;
-            var widthInBars = Math.Max(0.25,
-                MaxWidthBars * ProfileWidthScalePercent / 100.0 * lvnVolumes[level] / maxSmoothedVolume);
+            var widthInBars = Math.Min(
+                Math.Max(0.25, MaxWidthBars * ProfileWidthScalePercent / 100.0 * lvnVolumes[level] / maxSmoothedVolume),
+                liveWidthCapInBars);
             var lvnDuration = TimeSpan.FromTicks((long)(interval.Ticks * widthInBars));
             var lvnMaximumDuration = profileBoundary - profileStart;
             if (lvnDuration > lvnMaximumDuration)
@@ -621,8 +630,9 @@ public partial class TPO_01 : Indicator
             };
         }
 
-        if (OuterContourOnly)
-            DrawOuterProfileContour(profileNumber, volumes, step, profileStart, profileBoundary, interval, maxVolume, names);
+        if (OuterContourOnly && liveWidthCapInBars > 0)
+            DrawOuterProfileContour(profileNumber, volumes, step, profileStart, profileBoundary, interval, maxVolume,
+                liveWidthCapInBars, names);
 
         if (oldNames != null)
         {
@@ -988,12 +998,14 @@ public partial class TPO_01 : Indicator
 
     private void DrawOuterProfileContour(int profileNumber, System.Collections.Generic.SortedDictionary<int, double> volumes,
         double step, System.DateTime profileStart, System.DateTime profileBoundary, TimeSpan interval, double maxVolume,
-        System.Collections.Generic.List<string> names)
+        double maxWidthInBars, System.Collections.Generic.List<string> names)
     {
         var rows = new System.Collections.Generic.List<(int Level, System.DateTime EndTime)>();
         foreach (var row in volumes)
         {
-            var widthInBars = Math.Max(0.25, MaxWidthBars * ProfileWidthScalePercent / 100.0 * row.Value / maxVolume);
+            var widthInBars = Math.Min(
+                Math.Max(0.25, MaxWidthBars * ProfileWidthScalePercent / 100.0 * row.Value / maxVolume),
+                maxWidthInBars);
             var rowDuration = TimeSpan.FromTicks((long)(interval.Ticks * widthInBars));
             var maximumDuration = profileBoundary - profileStart;
             if (rowDuration > maximumDuration)

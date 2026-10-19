@@ -14,7 +14,7 @@ MarketProfileTPO is a cTrader indicator that displays volume-style and TPO (Time
 - **Profile open/close markers:** Short horizontal markers show the selected profile period's open and close prices.
 - **Diagnostics panel:** Displays the active profile, chart and tick information, row size, and calculation status.
 
-The indicator can draw individual profile rows or only the outer profile contour. Profile row width is proportional to the row's tick count and is clipped so it does not overlap the next profile period.
+The indicator can draw individual profile rows or only the outer profile contour. Profile row width is proportional to the row's tick count and is clipped so it does not overlap the next profile period. While a profile is forming, its width grows across elapsed chart bars so the current chart candle remains visible; closed profiles use the configured width normally.
 
 ## Add it to cTrader
 
