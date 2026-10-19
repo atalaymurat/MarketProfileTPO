@@ -81,6 +81,18 @@ Settings are grouped in cTrader's indicator parameters.
 - LVN is detected from a Gaussian-smoothed version of the quote-tick row counts. Smoothing is used for LVN detection; it does not change the underlying tick counts used by the volume histogram or VPOC.
 - Tick history availability depends on the broker and the data loaded by cTrader. If historical ticks are incomplete, historical profiles may only reflect the ticks available to the indicator.
 
+## Reference methodology and sources
+
+The TPO concepts used here follow the Market Profile framework described by **Jim Dalton**: a TPO represents a time-and-price opportunity, and the profile organizes activity across time and price. The TPOC and VPOC tie-breaking rules and the TPO Value Area expansion are implemented with **Sierra Chart's documented conventions** as a technical reference. Sierra Chart's standard TPO Value Area percentage is 70%; this indicator defaults to 68.27%, which users can change in the settings.
+
+This is an independent cTrader implementation, not an official Jim Dalton or Sierra Chart product. Some data and mechanics differ by design: TPO blocks come from the cTrader chart candles, and the Forex volume profile counts broker quote ticks at their Bid/Ask midpoint. Therefore the VPOC/LVN distribution is not exchange-traded volume and should not be expected to match Sierra Chart's volume profile on markets with actual trade-volume data.
+
+Sources:
+
+- Jim Dalton Trading, [What Is the Market Profile?](https://jimdaltontrading.com/what-is-the-market-profile-2/) — Market Profile overview and the TPO as its basic time-price building block.
+- Sierra Chart, [TPO Profile Charts: Technical Value Calculations](https://www.sierrachart.com/index.php?page=doc/StudiesReference/TimePriceOpportunityCharts.html) — documented TPOC/VPOC tie-breaking, TPO Value Area expansion, and default percentage.
+- Sierra Chart, [Volume by Price](https://www.sierrachart.com/index.php?ID=141&Name=Volume_by_Price&page=doc/StudiesReference.php) — volume-profile concepts and calculation settings.
+
 ## License
 
 No license file is currently included. Contact the repository owner for permission to reuse or redistribute this project.
